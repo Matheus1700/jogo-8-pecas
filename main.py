@@ -58,9 +58,5 @@ button_aestrela.pack(side="left")
 
 
 
-
-
-
-
 # Iniciar a aplicação
 root.mainloop()
