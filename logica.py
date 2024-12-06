@@ -1,8 +1,33 @@
 # Aqui vai o codigo da manhattan distance
 import copy
 
+# calculando distancias iguais -- ERRO
+def distancia_manhattan(vetor_jogo):
+    objetivo = ((1, 2, 3), (4, 5, 6), (7, 8, 0))
+    distancia = 0
 
-def formarAdjacentes(vetor_jogo, pos_zero, pos_adj):
+    for linha_atual in range(3): 
+        for coluna_atual in range(3): 
+            valor_atual = vetor_jogo[linha_atual][coluna_atual]
+
+            if valor_atual != 0: 
+                for linha_objetivo in range(3):  
+                    for coluna_objetivo in range(3): 
+                        if objetivo[linha_objetivo][coluna_objetivo] == valor_atual:
+                            distancia += abs(linha_atual - linha_objetivo) + abs(coluna_atual - coluna_objetivo)
+                            break
+
+    return distancia
+
+
+def busca_gulosa(vetor_jogo):
+    pass
+
+
+def formarAdjacentes(vetor_jogo):
+    pos_adj = encontrarAdjacentes(vetor_jogo)
+    pos_zero = encontrarPosicaoZero(vetor_jogo)
+
     linha_zero = pos_zero[0]
     coluna_zero = pos_zero[1]
 
@@ -21,7 +46,6 @@ def formarAdjacentes(vetor_jogo, pos_zero, pos_adj):
         lista_resultado.append(matriz_jogo)
 
     return lista_resultado
-
 
 def encontrarAdjacentes(vetor_jogo):             #  x  y 
     pos_zero = encontrarPosicaoZero(vetor_jogo)  # (1, 1)  -->      Linha                                 Superior
@@ -56,8 +80,14 @@ def encontrarPosicaoZero(vetor_jogo):
 
 
 
-vetor_jogo = [[1, 2, 3], [6, 8, 5], [7, 4, 0]]
-lista_nova = formarAdjacentes(vetor_jogo, encontrarPosicaoZero(vetor_jogo), encontrarAdjacentes(vetor_jogo))
+vetor_jogo = [[1, 2, 3], [5, 0, 4], [7, 8, 9]]
+lista_nova = formarAdjacentes(vetor_jogo)
 
 print("Lista Final: ")
-print(lista_nova)
+for e in lista_nova:
+    print(e)
+print("--------------------------------")
+print("Distancia: ", distancia_manhattan(lista_nova[0]))
+print("Distancia: ", distancia_manhattan(lista_nova[1]))
+print("Distancia: ", distancia_manhattan(lista_nova[2]))
+print("Distancia: ", distancia_manhattan(lista_nova[3]))
