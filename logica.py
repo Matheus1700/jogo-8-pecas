@@ -33,26 +33,26 @@ def matriz_resolvivel(matriz):
 
 def busca_gulosa(vetor_jogo):
     objetivo = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
-    visitados = set()  # Conjunto para rastrear estados visitados
+    visitados = set() 
 
     while vetor_jogo != objetivo:
-        estado_atual_tuple = tuple(tuple(linha) for linha in vetor_jogo)
-        visitados.add(estado_atual_tuple)  # Adiciona o estado atual ao conjunto de visitados
+        estado_atual = tuple(map(tuple, vetor_jogo))        
+        visitados.add(estado_atual)  
         
         lista_nova = formarAdjacentes(vetor_jogo)
         distancias = []
         proximos_estados = []
 
-        # Calculando as distâncias de Manhattan de todos os vizinhos e filtrando estados já visitados
+        # calculando as distancias de Manhattan de todos os adj e filtrando posicoes já visitadas
         for e in lista_nova:
             estado_tuple = tuple(tuple(linha) for linha in e)
-            if estado_tuple not in visitados:  # Ignora estados já visitados
+            if estado_tuple not in visitados:  
                 dist = distancia_manhattan(e)
                 distancias.append(dist)
                 proximos_estados.append(e)
 
         if not proximos_estados:
-            print("Sem estados válidos para explorar. Ciclo detectado ou impasse!")
+            print("Ciclo detectado ou jogo não resolvido")
             break
 
         # Encontrando o estado com a menor distância
@@ -124,5 +124,5 @@ for linha in vetor_jogo:
     print(linha)
 print("--------------------------------")
 
-# Executando a busca gulosa
+
 busca_gulosa(vetor_jogo)
