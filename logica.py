@@ -1,5 +1,7 @@
 import copy
 import random
+import time
+import heapq
 
 def distancia_manhattan(vetor_jogo):
     objetivo = ((1, 2, 3), (4, 5, 6), (7, 8, 0))
@@ -65,49 +67,56 @@ def busca_gulosa(vetor_jogo):
             print(linha)
         print("Distância de Manhattan para o objetivo:", menor_valor)
         print("--------------------------------")
+        time.sleep(2)
 
     if vetor_jogo == objetivo:
         print("Objetivo alcançado!")
 
 def formarAdjacentes(vetor_jogo):
     pos_adj = encontrarAdjacentes(vetor_jogo)
-    pos_zero = encontrarPosicaoZero(vetor_jogo)
+    linha_zero, coluna_zero = encontrarPosicaoZero(vetor_jogo)
 
-    linha_zero = pos_zero[0]
-    coluna_zero = pos_zero[1]
-
-    lista_resultado = list()
-    for i in range(len(pos_adj)):
+    lista_resultado = []
+    for linha_adj, coluna_adj in pos_adj:
         matriz_jogo = copy.deepcopy(vetor_jogo)
-        linha_adj, coluna_adj = pos_adj[i]          
 
-        # trocando a posicao de 0 com o numero que vai substituilo
-        matriz_jogo[linha_zero][coluna_zero] = matriz_jogo[linha_adj][coluna_adj] 
+        # Troca os valores: o número adjacente ocupa o lugar do zero, e zero vai para a posição adjacente
+        matriz_jogo[linha_zero][coluna_zero], matriz_jogo[linha_adj][coluna_adj] = (
+            matriz_jogo[linha_adj][coluna_adj],
+            matriz_jogo[linha_zero][coluna_zero],
+        )
 
-        # trocando o valor do numero adjacente por zero
-        matriz_jogo[linha_adj][coluna_adj] = 0
-
-        # adicionando na lista final
         lista_resultado.append(matriz_jogo)
+
+    # Debug: exibir os estados adjacentes
+    print("Estados adjacentes gerados:")
+    for matriz in lista_resultado:
+        for linha in matriz:
+            print(linha)
+        print("----------")
 
     return lista_resultado
 
 def encontrarAdjacentes(vetor_jogo):
-    pos_zero = encontrarPosicaoZero(vetor_jogo)
-    zero_x, zero_y = pos_zero
-    pos_testadas = [(zero_x, zero_y - 1), (zero_x, zero_y + 1), 
-                    (zero_x - 1, zero_y), (zero_x + 1, zero_y)]
-    
-    pos_adj = []
-    for linha_atual, coluna_atual in pos_testadas:
-        if linha_atual >= 0 and coluna_atual >= 0:  # Exclui posições fora da matriz
-            try:
-                valor = vetor_jogo[linha_atual][coluna_atual]
-                pos_adj.append((linha_atual, coluna_atual))
-            except IndexError:
-                pass
+    linha_zero, coluna_zero = encontrarPosicaoZero(vetor_jogo)
 
-    return pos_adj
+    # Testamos todas as 4 direções possíveis
+    direcoes = [
+        (linha_zero, coluna_zero - 1),  # Esquerda
+        (linha_zero, coluna_zero + 1),  # Direita
+        (linha_zero - 1, coluna_zero),  # Cima
+        (linha_zero + 1, coluna_zero),  # Baixo
+    ]
+
+    # Retornamos apenas as direções válidas
+    posicoes_validas = [
+        (linha, coluna)
+        for linha, coluna in direcoes
+        if 0 <= linha < 3 and 0 <= coluna < 3
+    ]
+
+    return posicoes_validas
+
 
 def encontrarPosicaoZero(vetor_jogo):
     for i in range(3):
@@ -117,12 +126,64 @@ def encontrarPosicaoZero(vetor_jogo):
 
 
 
-# Gerando uma matriz inicial aleatória válida
-vetor_jogo = gerar_matriz_aleatoria()
-print("Matriz inicial:")
-for linha in vetor_jogo:
-    print(linha)
-print("--------------------------------")
+def busca_a_estrela(vetor_jogo):
+    objetivo = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+    
+    # Fila de prioridade para gerenciar os estados
+    fila_prioridade = []
+    visitados = set()  # Para rastrear os estados já visitados
+
+    # Adicionando o estado inicial
+    custo_g = 0  # Custo acumulado g
+    heuristica = distancia_manhattan(vetor_jogo)  # Estimativa da distância para o objetivo
+    heapq.heappush(fila_prioridade, (custo_g + heuristica, custo_g, vetor_jogo))
+
+    while fila_prioridade:
+        _, custo_g, estado_atual = heapq.heappop(fila_prioridade)
+
+        if estado_atual == objetivo:
+            print("Objetivo alcançado!")
+            return
+        
+        # Marcar estado como visitado
+        estado_tuple = tuple(map(tuple, estado_atual))  # Converte para formato hashable
+        if estado_tuple in visitados:
+            continue
+        visitados.add(estado_tuple)
+
+        # Gerar os estados vizinhos
+        vizinhos = formarAdjacentes(estado_atual)
+        for vizinho in vizinhos:
+            if tuple(map(tuple, vizinho)) not in visitados:
+                novo_custo_g = custo_g + 1  # Incrementa o custo g
+                nova_heuristica = distancia_manhattan(vizinho)  # Recalcula h(n)
+                f_n = novo_custo_g + nova_heuristica  # Calcula f(n)
+                heapq.heappush(fila_prioridade, (f_n, novo_custo_g, vizinho))
+
+                # Exibição do progresso
+                print("Novo estado após movimento:")
+                for linha in vizinho:
+                    print(linha)
+                print(f"g(n): {novo_custo_g}, h(n): {nova_heuristica}, f(n): {f_n}")
+                time.sleep(2)
+                print("--------------------------------")
+
+    print("Problema sem solução!")  # Caso a fila esvazie sem encontrar o objetivo
 
 
-busca_gulosa(vetor_jogo)
+while True:
+    # Gerando uma matriz inicial aleatória válida
+    vetor_jogo = gerar_matriz_aleatoria()
+    print("Gerando matriz\n")
+    time.sleep(1)
+    for linha in vetor_jogo:
+        print(linha)
+    print("--------------------------------")
+
+    busca = input("Deseja uma demonstração de que tipo de busca?\n1- Busca Gulosa\n2- Busca A*\n")
+    if busca == '1':
+        busca_gulosa(vetor_jogo)
+    elif busca == '2':
+        busca_a_estrela(vetor_jogo)
+    else:
+        print("Opção inválida")
