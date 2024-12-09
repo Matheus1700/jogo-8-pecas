@@ -1,7 +1,6 @@
-# Aqui vai o codigo da manhattan distance
 import copy
+import random
 
-# calculando distancias iguais -- ERRO
 def distancia_manhattan(vetor_jogo):
     objetivo = ((1, 2, 3), (4, 5, 6), (7, 8, 0))
     distancia = 0
@@ -19,10 +18,56 @@ def distancia_manhattan(vetor_jogo):
 
     return distancia
 
+def gerar_matriz_aleatoria():
+    matriz = list(range(9))
+    while True:
+        random.shuffle(matriz)
+        matriz_2d = [matriz[:3], matriz[3:6], matriz[6:]]
+        if matriz_resolvivel(matriz_2d):
+            return matriz_2d
+
+def matriz_resolvivel(matriz):
+    lista = [num for linha in matriz for num in linha]
+    inversoes = sum(1 for i in range(len(lista)) for j in range(i + 1, len(lista)) if lista[i] > lista[j] and lista[i] != 0 and lista[j] != 0)
+    return inversoes % 2 == 0
 
 def busca_gulosa(vetor_jogo):
-    pass
+    objetivo = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+    visitados = set()  # Conjunto para rastrear estados visitados
 
+    while vetor_jogo != objetivo:
+        estado_atual_tuple = tuple(tuple(linha) for linha in vetor_jogo)
+        visitados.add(estado_atual_tuple)  # Adiciona o estado atual ao conjunto de visitados
+        
+        lista_nova = formarAdjacentes(vetor_jogo)
+        distancias = []
+        proximos_estados = []
+
+        # Calculando as distâncias de Manhattan de todos os vizinhos e filtrando estados já visitados
+        for e in lista_nova:
+            estado_tuple = tuple(tuple(linha) for linha in e)
+            if estado_tuple not in visitados:  # Ignora estados já visitados
+                dist = distancia_manhattan(e)
+                distancias.append(dist)
+                proximos_estados.append(e)
+
+        if not proximos_estados:
+            print("Sem estados válidos para explorar. Ciclo detectado ou impasse!")
+            break
+
+        # Encontrando o estado com a menor distância
+        menor_valor = min(distancias)
+        posicao = distancias.index(menor_valor)
+        vetor_jogo = proximos_estados[posicao]
+
+        print("Novo estado após movimento:")
+        for linha in vetor_jogo:
+            print(linha)
+        print("Distância de Manhattan para o objetivo:", menor_valor)
+        print("--------------------------------")
+
+    if vetor_jogo == objetivo:
+        print("Objetivo alcançado!")
 
 def formarAdjacentes(vetor_jogo):
     pos_adj = encontrarAdjacentes(vetor_jogo)
@@ -34,7 +79,7 @@ def formarAdjacentes(vetor_jogo):
     lista_resultado = list()
     for i in range(len(pos_adj)):
         matriz_jogo = copy.deepcopy(vetor_jogo)
-        linha_adj = pos_adj[i][0];  coluna_adj = pos_adj[i][1];
+        linha_adj, coluna_adj = pos_adj[i]          
 
         # trocando a posicao de 0 com o numero que vai substituilo
         matriz_jogo[linha_zero][coluna_zero] = matriz_jogo[linha_adj][coluna_adj] 
@@ -47,47 +92,37 @@ def formarAdjacentes(vetor_jogo):
 
     return lista_resultado
 
-def encontrarAdjacentes(vetor_jogo):             #  x  y 
-    pos_zero = encontrarPosicaoZero(vetor_jogo)  # (1, 1)  -->      Linha                                 Superior
-                                                    # (1, 0) ,  (1, 2)                      , (0, 1), (2, 1)
-                                                    # (x, (y - 1)), (x, (y + 1))        ((x - 1), y), ((x + 1), y)
-    zero_x = pos_zero[0];   zero_y = pos_zero[1]
-    pos_testadas = ((zero_x, (zero_y - 1)), (zero_x, (zero_y + 1)), 
-                    (zero_x -1, zero_y), (zero_x + 1, zero_y));
+def encontrarAdjacentes(vetor_jogo):
+    pos_zero = encontrarPosicaoZero(vetor_jogo)
+    zero_x, zero_y = pos_zero
+    pos_testadas = [(zero_x, zero_y - 1), (zero_x, zero_y + 1), 
+                    (zero_x - 1, zero_y), (zero_x + 1, zero_y)]
     
     pos_adj = []
-    for i in range(4):
-        linha_atual = pos_testadas[i][0];
-        coluna_atual = pos_testadas[i][1];
-
-        if (linha_atual >= 0) and (coluna_atual >= 0): # exclui posicoes com valores negativos
+    for linha_atual, coluna_atual in pos_testadas:
+        if linha_atual >= 0 and coluna_atual >= 0:  # Exclui posições fora da matriz
             try:
                 valor = vetor_jogo[linha_atual][coluna_atual]
                 pos_adj.append((linha_atual, coluna_atual))
             except IndexError:
                 pass
 
-    return pos_adj;
+    return pos_adj
 
 def encontrarPosicaoZero(vetor_jogo):
-     pos_zero = tuple()
-
-     for i in range (3):
-        for j in range (3):
-            if (vetor_jogo[i][j] == 0):
-                pos_zero = (i, j)
-                return pos_zero
+    for i in range(3):
+        for j in range(3):
+            if vetor_jogo[i][j] == 0:
+                return (i, j)
 
 
 
-vetor_jogo = [[1, 2, 3], [5, 0, 4], [7, 8, 9]]
-lista_nova = formarAdjacentes(vetor_jogo)
-
-print("Lista Final: ")
-for e in lista_nova:
-    print(e)
+# Gerando uma matriz inicial aleatória válida
+vetor_jogo = gerar_matriz_aleatoria()
+print("Matriz inicial:")
+for linha in vetor_jogo:
+    print(linha)
 print("--------------------------------")
-print("Distancia: ", distancia_manhattan(lista_nova[0]))
-print("Distancia: ", distancia_manhattan(lista_nova[1]))
-print("Distancia: ", distancia_manhattan(lista_nova[2]))
-print("Distancia: ", distancia_manhattan(lista_nova[3]))
+
+# Executando a busca gulosa
+busca_gulosa(vetor_jogo)
